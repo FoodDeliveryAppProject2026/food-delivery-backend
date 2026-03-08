@@ -1,7 +1,9 @@
 
 // FILE: middleware/auth.js
 const jwt = require("jsonwebtoken");
-const User = require("./Model"); // put the path of Model.js file 
+
+// put the path of Model.js file
+const User = require("../models/user.model"); 
 
 const protect = async (req, res, next) => {
   try {
@@ -39,7 +41,7 @@ const protect = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Auth middleware error:", error.message);
-    res.status(401).json({ message: "Token is invalid or expired. Please log in again." });
+    res.status(403).json({ message: "Token is invalid or expired. Please log in again." });
   }
 };
 

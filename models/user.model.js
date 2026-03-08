@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
+
 // Put the path of (DatabaseFileName).js
-const sequelize = require("./db");
+const sequelize = require("../db");
 const bcrypt = require("bcryptjs");
 
 //Define the Model
@@ -15,8 +16,13 @@ const User = sequelize.define(
       primaryKey: true,          
     },
 
-    // --- COLUMN 2: name ---
-    name: {
+    // --- COLUMN 2: First name___Second name ---
+    FirstName: {
+      type: DataTypes.STRING,     
+      allowNull: false,           
+    },
+    
+    LastName: {
       type: DataTypes.STRING,     
       allowNull: false,           
     },
