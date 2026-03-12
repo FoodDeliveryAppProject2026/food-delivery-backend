@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 
 // Put the path of (DatabaseFileName).js
-const sequelize = require("../db");
+const sequelize = require("../config/db");
 const bcrypt = require("bcryptjs");
 
 //Define the Model
@@ -11,29 +11,29 @@ const User = sequelize.define(
     // --- COLUMN 1: id ---
     // This is the PRIMARY KEY
     id: {
-      type: DataTypes.INTEGER,    
-      autoIncrement: true,        
-      primaryKey: true,          
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
     },
 
     // --- COLUMN 2: First name___Last name ---
     FirstName: {
-      type: DataTypes.STRING,     
-      allowNull: false,           
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    
+
     LastName: {
-      type: DataTypes.STRING,     
-      allowNull: false,           
+      type: DataTypes.STRING,
+      allowNull: false,
     },
 
     // --- COLUMN 3: email ---
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,               
+      unique: true,
       validate: {
-        isEmail: true,           
+        isEmail: true,
       },
     },
 
@@ -46,8 +46,8 @@ const User = sequelize.define(
 
   {
     // --- TABLE OPTIONS ---
-    timestamps: true,       
-    tableName: "users",     
+    timestamps: true,
+    tableName: "users",
 
     hooks: {
       beforeCreate: async (user) => {
@@ -62,9 +62,8 @@ const User = sequelize.define(
         }
       },
     },
-  }
+  },
 );
-
 
 // -- ComparePassword --
 User.prototype.comparePassword = async function (typedPassword) {
