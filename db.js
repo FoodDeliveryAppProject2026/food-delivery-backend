@@ -5,7 +5,7 @@ const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: process.env.DB_PASSWORD,
-    database: 'HotMeal'
+    database: 'hot_meal_db' //database_name
 });
 
 db.connect(err => {

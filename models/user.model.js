@@ -16,7 +16,7 @@ const User = sequelize.define(
       primaryKey: true,          
     },
 
-    // --- COLUMN 2: First name___Second name ---
+    // --- COLUMN 2: First name___Last name ---
     FirstName: {
       type: DataTypes.STRING,     
       allowNull: false,           

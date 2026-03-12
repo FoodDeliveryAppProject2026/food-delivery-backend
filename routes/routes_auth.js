@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 //the path of the controller
-const { register, login } = require("../controllers/controllers_auth.js");
+const { register, login } = require("../controllers/controllers_auth");
 
 // POST /api/auth/register → calls register()
 router.post("/register", register);
