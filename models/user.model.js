@@ -20,11 +20,26 @@ const User = sequelize.define(
     FirstName: {
       type: DataTypes.STRING,
       allowNull: false,
+      //this set is to avoid additional unnecessary spaces "   John   " -> "John"
+      set(value) {
+        const trimmed = value.trim();
+        this.setDataValue(
+          "FirstName",
+          trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase(),
+        );
+      }
     },
 
     LastName: {
       type: DataTypes.STRING,
       allowNull: false,
+      set(value) {
+        const trimmed = value.trim();
+        this.setDataValue(
+          "LastName",
+          trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase(),
+        );
+      }
     },
 
     // --- COLUMN 3: email ---
