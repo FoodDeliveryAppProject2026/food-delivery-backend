@@ -57,12 +57,32 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // --- COLUMN 5: phone number ---
+    phone_number: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true,
+      validate: {
+        isNumeric: true,
+      },
+    },
+      // --- NEW: role ---
+    role: {
+      type: DataTypes.ENUM("Customer", "Vendor", "Admin"),
+      allowNull: false,
+      defaultValue: "Customer",
+    },
+
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
 
   {
     // --- TABLE OPTIONS ---
     timestamps: true,
-    tableName: "users",
+    tableName: "Users",
 
     hooks: {
       beforeCreate: async (user) => {
