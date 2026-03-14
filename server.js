@@ -1,24 +1,31 @@
-const mysql = require('mysql2');
+require('dotenv').config();
+
 const cors = require('cors');
 const express = require('express');
 const app = express();
 
-//it allows to show data in json
+// allows to show data in json
 app.use(express.json());
-//it allows back-end to communicate with front-end
+
+// allows back-end to communicate with front-end
 app.use(cors({
-    origin:'http://localhost:3000'
+  origin: process.env.CORS_ORIGIN
 }));
 
-//load .env variables
-require('dotenv').config();
+// import db connection
+const sequelize = require('./config/db');
 
-//import routes
+// import routes
 const authRoutes = require('./routes/routes_auth');
 app.use('/auth', authRoutes);
 
-//listen on port 3000
+// sync database
+sequelize.sync({ force: false })
+  .then(() => console.log('✅ Database synced'))
+  .catch((err) => console.error('❌ Database sync failed:', err));
+
+// listen on port
 const port = process.env.PORT;
 app.listen(port, () => {
-    console.log(`http://localhost:${port}/`);
+  console.log(`http://localhost:${port}/`);
 });
