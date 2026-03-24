@@ -12,7 +12,7 @@ const User = sequelize.define(
     },
 
     email: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false,
       unique: true,
       validate: {
@@ -21,7 +21,7 @@ const User = sequelize.define(
     },
 
     password_hash: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false,
     },
 
@@ -36,24 +36,18 @@ const User = sequelize.define(
 
     role: {
       type: DataTypes.ENUM("Customer", "Vendor", "Admin"),
-      allowNull: false,
-      defaultValue: "Customer",
+      allowNull: true,        // matches DEFAULT NULL in your SQL
+      defaultValue: null,     // no default in SQL
     },
 
     is_verified: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-
-    // --- order_delivery_id ---
-    order_delivery_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+      defaultValue: false,    // maps to tinyint DEFAULT '0'
     },
   },
   {
     timestamps: true,
-    tableName: "Users",
+    tableName: "users",       // your SQL table is lowercase "users"
     createdAt: "created_at",
     updatedAt: "updated_at",
     hooks: {

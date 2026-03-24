@@ -12,7 +12,7 @@ const createToken = (user_id) => {
 // --- Sign Up ---
 exports.register = async (req, res) => {
   try {
-    const { email, password, phone_number, role, order_delivery_id } = req.body;
+    const { email, password, phone_number, role } = req.body; // removed order_delivery_id
 
     // required fields
     if (!email || !password)
@@ -26,6 +26,11 @@ exports.register = async (req, res) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/;
     if (!passwordRegex.test(password))
       return res.status(400).json({ message: "Password must contain at least one number, small and capital letter, special character" });
+
+    // validate role if provided
+    const allowedRoles = ["Customer", "Vendor", "Admin"];
+    if (role && !allowedRoles.includes(role))
+      return res.status(400).json({ message: "Invalid role. Must be Customer, Vendor, or Admin" });
 
     // check if email exists
     const existingUser = await User.findOne({ where: { email } });
@@ -43,9 +48,8 @@ exports.register = async (req, res) => {
     const user = await User.create({
       email,
       password_hash: password,
-      phone_number,
-      role,
-      order_delivery_id: order_delivery_id || null,
+      phone_number: phone_number || null,
+      role: role || null,               // no forced default, matches SQL
     });
 
     const token = createToken(user.user_id);
