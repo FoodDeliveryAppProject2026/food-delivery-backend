@@ -36,18 +36,28 @@ const User = sequelize.define(
 
     role: {
       type: DataTypes.ENUM("Customer", "Vendor", "Admin"),
-      allowNull: true,        // matches DEFAULT NULL in your SQL
-      defaultValue: null,     // no default in SQL
+      allowNull: true, // matches DEFAULT NULL in your SQL
+      defaultValue: null, // no default in SQL
     },
 
     is_verified: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,    // maps to tinyint DEFAULT '0'
+      defaultValue: false, // maps to tinyint DEFAULT '0'
+    },
+
+    otp_code: {
+      type: DataTypes.STRING(6),
+      allowNull: true,
+    },
+
+    otp_expires_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {
     timestamps: true,
-    tableName: "users",       // your SQL table is lowercase "users"
+    tableName: "users", // your SQL table is lowercase "users"
     createdAt: "created_at",
     updatedAt: "updated_at",
     hooks: {
@@ -63,7 +73,7 @@ const User = sequelize.define(
         }
       },
     },
-  }
+  },
 );
 
 User.prototype.comparePassword = async function (typedPassword) {

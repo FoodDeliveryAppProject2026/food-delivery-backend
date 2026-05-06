@@ -286,6 +286,8 @@ CREATE TABLE `users` (
   UNIQUE KEY `phone_number` (`phone_number`),
   CONSTRAINT `users_chk_1` CHECK ((`role` in (_utf8mb4'Customer',_utf8mb4'Vendor',_utf8mb4'Admin')))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+ALTER TABLE users ADD COLUMN otp_code VARCHAR(6) DEFAULT NULL;
+ALTER TABLE users ADD COLUMN otp_expires_at DATETIME DEFAULT NULL;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
