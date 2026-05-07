@@ -16,8 +16,11 @@ app.use(cors({
 const sequelize = require('./config/db');
 
 // import routes
-const authRoutes = require('./routes/routes_auth');
+const authRoutes = require('./routes/auth.routes');
 app.use('/auth', authRoutes);
+
+const customerRoutes = require("./routes/customer.routes");
+app.use("/customer", customerRoutes);
 
 // sync database
 sequelize.sync({ force: false })
