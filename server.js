@@ -1,31 +1,38 @@
-require('dotenv').config();
-
+const mysql = require('mysql2');
 const cors = require('cors');
 const express = require('express');
 const app = express();
+const path = require('path');
 
-// allows to show data in json
+app.use(express.static(path.join(__dirname, 'public')));
+//it allows to show data in json
 app.use(express.json());
+//it allows back-end to communicate with front-end
 
-// allows back-end to communicate with front-end
 app.use(cors({
-  origin: process.env.CORS_ORIGIN
+    origin:'http://localhost:3000'
 }));
 
-// import db connection
-const sequelize = require('./config/db');
+//app.use(cors());
 
-// import routes
-const authRoutes = require('./routes/routes_auth');
+//load .env variables
+require('dotenv').config();
+
+//import routes
+const authRoutes = require('./routes/auth.routes');
 app.use('/auth', authRoutes);
+//for home page
+const homeRoutes = require('./routes/vendors.routes');
+app.use('/home', homeRoutes);
+//for menu page
+const menuRoutes = require('./routes/menu.routes');
+app.use('/home', menuRoutes);
+//for cart page
+const cartRoutes = require('./routes/cart.routes');
+app.use('/cart', cartRoutes);
 
-// sync database
-sequelize.sync({ force: false })
-  .then(() => console.log('✅ Database synced'))
-  .catch((err) => console.error('❌ Database sync failed:', err));
-
-// listen on port
+//listen on port 3000
 const port = process.env.PORT;
 app.listen(port, () => {
-  console.log(`http://localhost:${port}/`);
+    console.log(`http://localhost:${port}/`);
 });
