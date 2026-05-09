@@ -39,6 +39,9 @@ app.use("/reviews", reviewRoutes);
 
 const dashboardRoutes = require("./routes/dashboard.routes");
 app.use("/dashboard", dashboardRoutes);
+
+const driverRoutes = require("./routes/driver.routes");
+app.use("/driver", driverRoutes);
 // sync database
 sequelize.sync({ force: false })
   .then(() => console.log('✅ Database synced'))
