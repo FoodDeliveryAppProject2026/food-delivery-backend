@@ -31,6 +31,8 @@ app.use('/home', menuRoutes);
 const cartRoutes = require('./routes/cart.routes');
 app.use('/cart', cartRoutes);
 
+const orderRoutes = require("./routes/order.routes");
+app.use("/orders", orderRoutes);
 // sync database
 sequelize.sync({ force: false })
   .then(() => console.log('✅ Database synced'))
