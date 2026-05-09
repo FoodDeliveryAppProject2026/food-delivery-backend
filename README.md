@@ -4,7 +4,7 @@ Backend  for food delivery app
 # Food Delivery API Documentation
 
 Base URL: `http://localhost:3000/api`
-
+ 
 ## Response Format
 
 Every endpoint returns the same shape:
