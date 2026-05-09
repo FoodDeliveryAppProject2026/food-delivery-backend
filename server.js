@@ -4,13 +4,16 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 
+// allows back-end to communicate with front-end
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 // allows to show data in json
 app.use(express.json());
 
-// allows back-end to communicate with front-end
-app.use(cors({
-  origin: process.env.CORS_ORIGIN
-}));
 
 // import db connection
 const sequelize = require('./config/db');
