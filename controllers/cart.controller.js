@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../config/db');
 
 /*
 from menu_items vendor_id , name , description , price , image_url  
