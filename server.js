@@ -37,6 +37,8 @@ app.use("/orders", orderRoutes);
 const reviewRoutes = require("./routes/review.routes");
 app.use("/reviews", reviewRoutes);
 
+const dashboardRoutes = require("./routes/dashboard.routes");
+app.use("/dashboard", dashboardRoutes);
 // sync database
 sequelize.sync({ force: false })
   .then(() => console.log('✅ Database synced'))
