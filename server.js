@@ -33,6 +33,10 @@ app.use('/cart', cartRoutes);
 
 const orderRoutes = require("./routes/order.routes");
 app.use("/orders", orderRoutes);
+
+const reviewRoutes = require("./routes/review.routes");
+app.use("/reviews", reviewRoutes);
+
 // sync database
 sequelize.sync({ force: false })
   .then(() => console.log('✅ Database synced'))
