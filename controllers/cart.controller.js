@@ -1,128 +1,145 @@
-const db = require('../config/db');
+const OrderItem = require("../models/cart.model");
+const MenuItem = require("../models/menu.model");
 
-/*
-from menu_items vendor_id , name , description , price , image_url  
-order summary subtotal = price * quantity , delivery fee , tax , total subtotal + delivery fee + tax
+// --- Add Item to Cart ---
+exports.addToCart = async (req, res) => {
+  try {
+    const { order_id, item_id, quantity } = req.body;
 
-in orders status = pending 
-after checkout status = placed
-*/
+    if (!order_id || !item_id || !quantity)
+      return res.status(400).json({
+        success: false,
+        message: "order_id, item_id and quantity are required",
+      });
 
-//add to cart from each meal
-exports.addToCart = (req, res) => {
+    const menuItem = await MenuItem.findByPk(item_id);
+    if (!menuItem)
+      return res
+        .status(404)
+        .json({ success: false, message: "Menu item not found" });
 
-  const { order_id, item_id, quantity } = req.body; 
+    if (!menuItem.is_available)
+      return res
+        .status(400)
+        .json({ success: false, message: "Menu item is not available" });
 
-  const query = `
-    INSERT INTO order_items (order_id, item_id, quantity, unit_price)
-    SELECT ?, ?, ?, price
-    FROM menu_items
-    WHERE item_id = ?
-  `;
-
-  db.query(query, [order_id, item_id, quantity, item_id], (err) => {
-    if(err) return res.status(500).json(err);
-    res.json({ message: "Added to cart" });
-  });
-};
-
-//update quantity
-exports.updateQuantity = (req, res) => {
-
-  const { order_id, item_id, quantity } = req.body;
-
-  if(quantity <= 0){
-    return res.status(400).json({ message: "Quantity invalid" });
-  }
-
-  const query = `
-    UPDATE order_items
-    SET quantity = ?
-    WHERE order_id = ? AND item_id = ?
-  `;
-
-  db.query(query, [quantity, order_id, item_id], (err) => {
-
-    if(err) return res.status(500).json(err);
-
-    res.json({ message: "Updated" });
-  });
-};
-//delete from cart
-exports.removeItem = (req, res) => {
-
-  const { order_id, item_id } = req.params;
-
-  const query = `
-    DELETE FROM order_items
-    WHERE order_id = ? AND item_id = ?
-  `;
-
-  db.query(query, [order_id, item_id], (err) => {
-
-    if(err) return res.status(500).json(err);
-
-    res.json({ message: "Deleted" });
-  });
-};
-//get cart
-exports.getCart = (req, res) => {
-
-  const { order_id } = req.params;
-
-  const query = `
-    SELECT 
-      oi.item_id,
-      oi.quantity,
-      oi.unit_price,
-      m.name,
-      m.description,
-      m.image_url
-    FROM order_items oi
-    JOIN menu_items m ON oi.item_id = m.item_id
-    WHERE oi.order_id = ?
-  `;
-
-  db.query(query, [order_id], (err, results) => {
-
-    if(err) return res.status(500).json(err);
-
-    res.json(results);
-  });
-};
-exports.getCartSummary = (req, res) => {
-  const { order_id } = req.params;
-
-  const query = `
-    SELECT quantity, unit_price
-    FROM order_items
-    WHERE order_id = ?
-  `;
-
-  db.query(query, [order_id], (err, items) => {
-    if(err) return res.status(500).json(err);
-
-    let subtotal = 0;
-    items.forEach(i => {
-      subtotal += i.quantity * i.unit_price;
+    const cartItem = await OrderItem.create({
+      order_id,
+      item_id,
+      quantity,
+      unit_price: menuItem.price,
     });
-/*
-  from the database
-  const deliveryFee = 'SELECT delivery_fee FROM vendors WHERE vendor_id = ?;
 
-  or from the user 
-  const { deliveryFee } = req.body;
-*/
-    //or constant
-    const deliveryFee = 20;  
-    const tax = subtotal * 0.1;     
+    res
+      .status(201)
+      .json({ success: true, message: "Item added to cart", data: cartItem });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// --- Update Item Quantity ---
+exports.updateQuantity = async (req, res) => {
+  try {
+    const { order_id, item_id, quantity } = req.body;
+
+    if (!order_id || !item_id || !quantity)
+      return res.status(400).json({
+        success: false,
+        message: "order_id, item_id and quantity are required",
+      });
+
+    if (quantity <= 0)
+      return res
+        .status(400)
+        .json({ success: false, message: "Quantity must be greater than 0" });
+
+    const cartItem = await OrderItem.findOne({ where: { order_id, item_id } });
+    if (!cartItem)
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found in cart" });
+
+    await cartItem.update({ quantity });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Quantity updated", data: cartItem });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// --- Remove Item from Cart ---
+exports.removeItem = async (req, res) => {
+  try {
+    const { order_id, item_id } = req.params;
+
+    const cartItem = await OrderItem.findOne({ where: { order_id, item_id } });
+    if (!cartItem)
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found in cart" });
+
+    await cartItem.destroy();
+
+    res.status(200).json({ success: true, message: "Item removed from cart" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// --- Get Cart Items ---
+exports.getCart = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+
+    const items = await OrderItem.findAll({
+      where: { order_id },
+      include: [
+        {
+          model: MenuItem,
+          attributes: ["name", "description", "image_url"],
+        },
+      ],
+    });
+
+    res.status(200).json({ success: true, data: items });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// --- Get Cart Summary ---
+exports.getCartSummary = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+
+    const items = await OrderItem.findAll({ where: { order_id } });
+
+    if (items.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "Cart is empty or order not found" });
+
+    const subtotal = items.reduce(
+      (sum, i) => sum + i.quantity * parseFloat(i.unit_price),
+      0,
+    );
+    const deliveryFee = 20;
+    const tax = subtotal * 0.1;
     const total = subtotal + deliveryFee + tax;
 
-    res.json({
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      deliveryFee,
-      tax: parseFloat(tax.toFixed(2)),
-      total: parseFloat(total.toFixed(2))
+    res.status(200).json({
+      success: true,
+      data: {
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        deliveryFee,
+        tax: parseFloat(tax.toFixed(2)),
+        total: parseFloat(total.toFixed(2)),
+      },
     });
-  });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };

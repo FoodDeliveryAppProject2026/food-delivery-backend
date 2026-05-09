@@ -1,7 +1,6 @@
 const Order = require("../models/order.model");
 const MenuItem = require("../models/menu.model");
 const Review = require("../models/review.model");
-const Vendor = require("../models/vendors.model");
 
 // --- Get Vendor Orders ---
 exports.getVendorOrders = async (req, res) => {
@@ -13,10 +12,9 @@ exports.getVendorOrders = async (req, res) => {
       order: [["placed_at", "DESC"]],
     });
 
-    res.status(200).json(orders);
-
+    res.status(200).json({ success: true, data: orders });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -26,16 +24,24 @@ exports.updateOrderStatus = async (req, res) => {
     const { order_id } = req.params;
     const { status } = req.body;
 
+    if (!status)
+      return res
+        .status(400)
+        .json({ success: false, message: "Status is required" });
+
     const order = await Order.findByPk(order_id);
     if (!order)
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
     await order.update({ status });
 
-    res.status(200).json({ message: "Status updated", order });
-
+    res
+      .status(200)
+      .json({ success: true, message: "Status updated", data: order });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -45,14 +51,26 @@ exports.addMenuItem = async (req, res) => {
     const { name, description, price, image_url, vendor_id } = req.body;
 
     if (!name || !price || !vendor_id)
-      return res.status(400).json({ message: "Name, price and vendor_id are required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Name, price and vendor_id are required",
+        });
 
-    const item = await MenuItem.create({ name, description, price, image_url, vendor_id });
+    const item = await MenuItem.create({
+      name,
+      description,
+      price,
+      image_url,
+      vendor_id,
+    });
 
-    res.status(201).json({ message: "Menu item added", item });
-
+    res
+      .status(201)
+      .json({ success: true, message: "Menu item added", data: item });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -64,14 +82,17 @@ exports.editMenuItem = async (req, res) => {
 
     const item = await MenuItem.findByPk(item_id);
     if (!item)
-      return res.status(404).json({ message: "Item not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found" });
 
     await item.update({ name, description, price, image_url, is_available });
 
-    res.status(200).json({ message: "Menu item updated", item });
-
+    res
+      .status(200)
+      .json({ success: true, message: "Menu item updated", data: item });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -82,14 +103,15 @@ exports.deleteMenuItem = async (req, res) => {
 
     const item = await MenuItem.findByPk(item_id);
     if (!item)
-      return res.status(404).json({ message: "Item not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found" });
 
     await item.destroy();
 
-    res.status(200).json({ message: "Menu item deleted" });
-
+    res.status(200).json({ success: true, message: "Menu item deleted" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -100,17 +122,31 @@ exports.getVendorStats = async (req, res) => {
 
     const totalOrders = await Order.count({ where: { vendor_id } });
 
-    const deliveredOrders = await Order.findAll({ where: { vendor_id, status: "Delivered" } });
-    const revenue = deliveredOrders.reduce((sum, o) => sum + parseFloat(o.total_amount), 0);
+    const deliveredOrders = await Order.findAll({
+      where: { vendor_id, status: "Delivered" },
+    });
+    const revenue = deliveredOrders.reduce(
+      (sum, o) => sum + parseFloat(o.total_amount),
+      0,
+    );
 
     const reviews = await Review.findAll({ where: { vendor_id } });
-    const avgRating = reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(2)
-      : 0;
+    const avgRating =
+      reviews.length > 0
+        ? (
+            reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          ).toFixed(2)
+        : 0;
 
-    res.status(200).json({ totalOrders, revenue: revenue.toFixed(2), avgRating });
-
+    res.status(200).json({
+      success: true,
+      data: {
+        totalOrders,
+        revenue: revenue.toFixed(2),
+        avgRating,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };

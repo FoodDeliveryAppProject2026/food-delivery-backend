@@ -1,41 +1,34 @@
-const db = require("../config/db");
+const { Op } = require("sequelize");
+const Vendor = require("../models/vendors.model");
 
-exports.getVendors = (req, res) => {
-  const { filter, search } = req.query;
+// --- Get All Approved Vendors ---
+exports.getVendors = async (req, res) => {
+  try {
+    const { filter, search } = req.query;
 
-  let query = `
-    SELECT 
-      v.vendor_id,
-      v.store_name,
-      v.logo_url,
-      v.description,
-      v.is_open,
-      v.average_rating,
-      vc.name AS category_name
-    FROM vendors v
-    JOIN vendor_categories vc 
-      ON v.category_id = vc.category_id
-    WHERE v.application_status = 'Approved'
-  `;
-  const params = [];
-  //execute if filter is not all and has a value
-  if (filter && filter !== "all") {
-    query += ` AND vc.name = ?`;
-    params.push(filter);
+    const where = { application_status: "Approved" };
+
+    if (filter && filter !== "all") where.category_id = filter;
+
+    if (search) where.store_name = { [Op.like]: `%${search}%` };
+
+    const vendors = await Vendor.findAll({
+      where,
+      attributes: [
+        "vendor_id",
+        "store_name",
+        "logo_url",
+        "description",
+        "is_open",
+        "average_rating",
+        "delivery_fee",
+        "category_id",
+      ],
+      order: [["average_rating", "DESC"]],
+    });
+
+    res.status(200).json({ success: true, data: vendors });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  if (search) {
-    query += ` AND v.store_name LIKE ?`;
-    params.push(`%${search}%`);
-  }
-
-  query += ` ORDER BY v.average_rating DESC`;
-
-  db.query(query, params, (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: err.message });
-    }
-
-    res.json(results);
-  });
 };

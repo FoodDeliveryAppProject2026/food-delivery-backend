@@ -1,21 +1,19 @@
-const db = require('../config/db');
+const MenuItem = require("../models/menu.model");
 
-exports.getMeals = (req, res) => {
+// --- Get All Menu Items for a Vendor ---
+exports.getMeals = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  const vendorId = req.params.id;
+    const items = await MenuItem.findAll({
+      where: {
+        vendor_id: id,
+        is_available: true,
+      },
+    });
 
-  const query = `
-    SELECT *
-    FROM menu_items
-    WHERE vendor_id = ?
-
-  `;
-  db.query(query, [vendorId], (err, results) => {
-
-    if(err){
-      return res.status(500).json({ error: err.message });
-    }
-
-    res.json(results);
-  });
+    res.status(200).json({ success: true, data: items });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
