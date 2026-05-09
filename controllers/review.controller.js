@@ -9,25 +9,38 @@ exports.addReview = async (req, res) => {
     const user_id = req.user.user_id;
 
     if (!rating || !order_id || !vendor_id)
-      return res.status(400).json({ message: "Rating, order_id and vendor_id are required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Rating, order_id and vendor_id are required",
+        });
 
-    // get customer
     const customer = await Customer.findOne({ where: { user_id } });
     if (!customer)
-      return res.status(404).json({ message: "Customer profile not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer profile not found" });
 
-    // check order exists and is delivered
     const order = await Order.findByPk(order_id);
     if (!order)
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
     if (order.status !== "Delivered")
-      return res.status(400).json({ message: "You can only review delivered orders" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "You can only review delivered orders",
+        });
 
-    // check if already reviewed
     const existingReview = await Review.findOne({ where: { order_id } });
     if (existingReview)
-      return res.status(400).json({ message: "You already reviewed this order" });
+      return res
+        .status(400)
+        .json({ success: false, message: "You already reviewed this order" });
 
     const review = await Review.create({
       rating,
@@ -37,10 +50,15 @@ exports.addReview = async (req, res) => {
       customer_id: customer.customer_id,
     });
 
-    res.status(201).json({ message: "Review added successfully", review });
-
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: "Review added successfully",
+        data: review,
+      });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -54,10 +72,9 @@ exports.getVendorReviews = async (req, res) => {
       order: [["created_at", "DESC"]],
     });
 
-    res.status(200).json(reviews);
-
+    res.status(200).json({ success: true, data: reviews });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -68,16 +85,17 @@ exports.getMyReviews = async (req, res) => {
 
     const customer = await Customer.findOne({ where: { user_id } });
     if (!customer)
-      return res.status(404).json({ message: "Customer profile not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer profile not found" });
 
     const reviews = await Review.findAll({
       where: { customer_id: customer.customer_id },
       order: [["created_at", "DESC"]],
     });
 
-    res.status(200).json(reviews);
-
+    res.status(200).json({ success: true, data: reviews });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
