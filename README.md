@@ -519,7 +519,90 @@ All errors follow this shape:
 ```json
 { "success": false, "message": "Description of what went wrong" }
 ```
-
+---
+ 
+## Driver (Order Delivery)
+> All routes protected.
+ 
+### GET `/driver/my-delivery`
+Get the delivery assigned to the logged-in driver.
+ 
+**Response `200`:**
+```json
+{ "success": true, "data": { "order_delivery_id": 1, "first_name": "Omar", "last_name": "Hassan", "status": "Busy", "rating": 5, "user_id": 3, "order_id": 7 } }
+```
+ 
+---
+ 
+### GET `/driver`
+Get all deliveries. Admin use.
+ 
+**Response `200`:**
+```json
+{ "success": true, "data": [ { ... } ] }
+```
+ 
+---
+ 
+### POST `/driver/assign`
+Assign a driver to an order. Also updates order status to `Out for Delivery`.
+ 
+**Body:**
+```json
+{
+  "order_id": 7,
+  "user_id": 3,
+  "first_name": "Omar",
+  "last_name": "Hassan"
+}
+```
+ 
+**Response `201`:**
+```json
+{ "success": true, "message": "Driver assigned successfully", "data": { ... } }
+```
+ 
+---
+ 
+### PUT `/driver/status`
+Driver updates their own status.
+ 
+**Body:**
+```json
+{ "status": "Available" }
+```
+- `status` options: `Available`, `Busy`, `Offline`
+ 
+**Response `200`:**
+```json
+{ "success": true, "message": "Status updated", "data": { ... } }
+```
+ 
+---
+ 
+### PUT `/driver/rate`
+Customer rates the driver after delivery.
+ 
+**Body:**
+```json
+{ "order_id": 7, "rating": 5 }
+```
+- `rating` must be between 1 and 5
+ 
+**Response `200`:**
+```json
+{ "success": true, "message": "Driver rated successfully" }
+```
+ 
+---
+ 
+## Error Responses
+ 
+All errors follow this shape:
+```json
+{ "success": false, "message": "Description of what went wrong" }
+```
+ 
 | Status | Meaning |
 |---|---|
 | `400` | Validation error / bad request |
