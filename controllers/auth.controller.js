@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const { sendOTP } = require("../services/email.service");
 require("dotenv").config();
-
 // --- Create Token ---
 const createToken = (user_id) => {
   return jwt.sign({ user_id }, process.env.JWT_SECRET, {
@@ -34,7 +33,7 @@ exports.register = async (req, res) => {
           "Password must contain at least one number, small and capital letter, special character",
       });
 
-    const allowedRoles = ["Customer", "Vendor", "Admin"];
+    const allowedRoles = ["Customer", "Vendor"];
     if (role && !allowedRoles.includes(role))
       return res.status(400).json({
         success: false,
@@ -82,27 +81,52 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 1. Check required fields
     if (!email || !password)
-      return res
-        .status(400)
-        .json({ success: false, message: "Email and password are required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
 
+    // 2. Find user
     const user = await User.findOne({ where: { email } });
     if (!user)
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password", // ✅ vague on purpose (security)
+      });
 
+    // 3. Check password
     const validPassword = await user.comparePassword(password);
     if (!validPassword)
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
 
+    // 4. ✅ Block unverified users
+    if (!user.is_verified)
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email before logging in.",
+      });
+
+    // 5. ✅ Create token and return user info
     const token = createToken(user.user_id);
-    res
-      .status(200)
-      .json({ success: true, message: "Login successful", data: { token } });
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: {
+        token,
+        user: {
+          id: user.user_id,
+          email: user.email,
+          role: user.role, // ✅ frontend knows where to redirect
+          phone_number: user.phone_number,
+        },
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
