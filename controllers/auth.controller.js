@@ -19,19 +19,12 @@ exports.register = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Email and password are required" });
 
-    if (password.length < 8)
+    if (password.length < 6)
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 8 characters",
+        message: "Password must be at least 6 characters",
       });
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/;
-    if (!passwordRegex.test(password))
-      return res.status(400).json({
-        success: false,
-        message:
-          "Password must contain at least one number, small and capital letter, special character",
-      });
 
     const allowedRoles = ["Customer", "Vendor"];
     if (role && !allowedRoles.includes(role))
