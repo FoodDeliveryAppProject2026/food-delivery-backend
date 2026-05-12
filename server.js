@@ -2,56 +2,80 @@ require('dotenv').config();
 
 const cors = require('cors');
 const express = require('express');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const app = express();
 
-// allows back-end to communicate with front-end
+// ─── Security Headers ────────────────────────────────
+app.use(helmet()); // ✅ adds
+
+// ─── CORS ────────────────────────────────────────────
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true  // ✅ add this if frontend sends cookies
 }));
 
-// allows to show data in json
+// ─── Rate Limiting ───────────────────────────────────
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 10,                   // max 10 requests per window
+//   message: { success: false, message: "Too many attempts. Try again later." }
+// });
+// app.use('/auth', authLimiter); // ✅ protects login/register from brute force
+
+// ─── Body Parsing ────────────────────────────────────
 app.use(express.json());
 
+// ─── Logging ─────────────────────────────────────────
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev')); // ✅ logs requests in terminal
+}
 
-// import db connection
+// ─── Routes ──────────────────────────────────────────
 const sequelize = require('./config/db');
-
-// import routes
 const authRoutes = require('./routes/auth.routes');
-app.use('/auth', authRoutes);
-
 const customerRoutes = require("./routes/customer.routes");
-app.use("/customer", customerRoutes);
-
 const homeRoutes = require('./routes/vendor.routes');
-app.use('/home', homeRoutes);
-
 const menuRoutes = require('./routes/menu.routes');
-app.use('/home', menuRoutes);
-
 const cartRoutes = require('./routes/cart.routes');
-app.use('/cart', cartRoutes);
-
 const orderRoutes = require("./routes/order.routes");
-app.use("/orders", orderRoutes);
-
 const reviewRoutes = require("./routes/review.routes");
-app.use("/reviews", reviewRoutes);
-
 const dashboardRoutes = require("./routes/dashboard.routes");
-app.use("/dashboard", dashboardRoutes);
-
 const driverRoutes = require("./routes/driver.routes");
+
+app.use('/auth', authRoutes);
+app.use("/customer", customerRoutes);
+app.use('/home', homeRoutes);
+app.use('/home', menuRoutes);
+app.use('/cart', cartRoutes);
+app.use("/orders", orderRoutes);
+app.use("/reviews", reviewRoutes);
+app.use("/dashboard", dashboardRoutes);
 app.use("/driver", driverRoutes);
-// sync database
+
+// ─── 404 Handler ─────────────────────────────────────
+app.use((req, res) => {                       // ✅ unknown routes
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
+// ─── Global Error Handler ────────────────────────────
+app.use((err, req, res, next) => {            // ✅ catches all thrown errors
+  console.error("🔥", err.message);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error"
+  });
+});
+
+// ─── DB + Server Start ───────────────────────────────
 sequelize.sync({ force: false })
   .then(() => console.log('✅ Database synced'))
   .catch((err) => console.error('❌ Database sync failed:', err));
 
-// listen on port
-const port = process.env.PORT;
+const port = process.env.PORT;  // ✅ fallback port
 app.listen(port, () => {
-  console.log(`http://localhost:${port}/`);
+  console.log(`🚀 http://localhost:${port}/`);
 });
